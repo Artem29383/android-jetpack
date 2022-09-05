@@ -7,10 +7,9 @@ import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.example.composition.R
 import com.example.composition.databinding.FragmentGameFinishedBinding
 import com.example.composition.domain.entity.GameResult
-import com.example.composition.domain.entity.GameSettings
-import com.example.composition.domain.entity.Level
 import java.lang.RuntimeException
 
 class GameFinishedFragment : Fragment() {
@@ -35,6 +34,44 @@ class GameFinishedFragment : Fragment() {
                 retryGame()
             }
         })
+
+        with(binding) {
+            emojiResult.setImageResource(if (gameResult.winner) {
+                R.drawable.ic_smile
+            } else R.drawable.ic_sad)
+            buttonRetry.setOnClickListener {
+                retryGame()
+            }
+
+            tvRequiredAnswers.text = String.format(
+                getString(R.string.required_score),
+                gameResult.gameSettings.minCountOfRightAnswers
+            )
+
+            tvScoreAnswers.text = String.format(
+                getString(R.string.score_answers),
+                gameResult.countOfRightAnswers
+            )
+
+            tvRequiredPercentage.text = String.format(
+                getString(R.string.required_percentage),
+                gameResult.gameSettings.minPercentOfRightAnswers
+            )
+
+            tvScorePercentage.text = String.format(
+                getString(R.string.score_percentage),
+                getPercentOfRightAnswers()
+            )
+        }
+
+    }
+
+    private fun getPercentOfRightAnswers() = with(gameResult) {
+        if (countOfQuestions == 0) {
+            0
+        } else {
+            ((countOfRightAnswers / countOfQuestions.toDouble()) * 100).toInt()
+        }
     }
 
     override fun onDestroyView() {
@@ -48,7 +85,9 @@ class GameFinishedFragment : Fragment() {
     }
 
     private fun parseArgs() {
-        gameResult = requireArguments().getSerializable(KEY_GAME_RESULT) as GameResult
+        requireArguments().getParcelable<GameResult>(KEY_GAME_RESULT)?.let {
+            gameResult = it
+        }
     }
 
     private fun retryGame() {
@@ -61,7 +100,7 @@ class GameFinishedFragment : Fragment() {
         fun newInstance(gameResult: GameResult): GameFinishedFragment {
             return GameFinishedFragment().apply {
                 arguments = Bundle().apply {
-                    putSerializable(KEY_GAME_RESULT, gameResult)
+                    putParcelable(KEY_GAME_RESULT, gameResult)
                 }
             }
         }
